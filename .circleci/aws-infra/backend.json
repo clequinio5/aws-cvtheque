@@ -1,0 +1,6 @@
+[
+    {
+        "ParameterKey": "BucketName",
+        "ParameterValue": "aws-cvtheque-s3-bucket"
+    }
+]

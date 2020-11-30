@@ -1,0 +1,41 @@
+{
+  "name" : "job-aws-cvtheque",
+  "fs" : {
+    "includes" : [ "*.doc", "*.xls", "*.pdf", "*.docx" ],
+    "excludes" : [ ],
+    "json_support" : false,
+    "filename_as_id" : true,
+    "add_filesize" : true,
+    "add_as_inner_object" : true,
+    "store_source" : true,
+    "index_content" : true,
+    "indexed_chars" : "-1",
+    "attributes_support" : true,
+    "raw_metadata" : true,
+    "xml_support" : false,
+    "index_folders" : true,
+    "lang_detect" : true,
+    "continue_on_error" : true,
+	"checksum": "MD5",
+    "pdf_ocr" : true,
+    "ocr" : {
+      "language" : "fr",
+	  "output_type": "txt"
+    }
+  },
+  "elasticsearch" : {
+    "nodes" : [{"host" : "es_host","port" : 9200,"scheme" : "HTTP"}],
+    "index" : "cvtheque",
+    "bulk_size" : 1000,
+    "flush_interval" : "5s",
+    "byte_size" : "10mb",
+    "username" : "elastic",
+    "password" : "password"
+  },
+  "rest" : {
+    "scheme" : "HTTP",
+    "host" : "fscrawler_host",
+    "port" : 8080,
+    "endpoint" : "fscrawler"
+  }
+}

@@ -1,0 +1,37 @@
+- name: Install utilities
+  shell: |
+    sudo apt-get update \
+    sudo apt-get install unzip \
+    sudo apt-get install curl
+
+- name: Install Tesseract for OCR with all language support
+  shell: |
+    sudo apt update sudo apt install tesseract-ocr \
+    sudo apt-get install tesseract-ocr-all
+
+
+- name: Install JAVA
+  shell: |
+    sudo apt-get update \
+    sudo apt install openjdk-8-jdk \
+    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
+    echo $JAVA_HOME \
+    java -version
+
+- name: Install fscrawler
+  shell: |
+    curl -sL https://oss.sonatype.org/content/repositories/snapshots/fr/pilato/elasticsearch/crawler/fscrawler-es7/2.7-SNAPSHOT/fscrawler-es7-2.7-20201119.152048-141.zip | unzip fscrawler-es7-2.7-20201119.152048-141.zip
+    
+- name: Configure fscrawler
+  become: true
+  copy:
+    src: _settings.json
+    dest: /fscrawler-es7-2.7-SNAPSHOT/config/
+    mode: '0644'
+    
+    
+- name: Launch fscrawler
+  shell: |
+    cd fscrawler-es7-2.7-SNAPSHOT \
+    bin/fscrawler --config_dir ./config job-aws-cvtheque --loop 0 --rest
+    

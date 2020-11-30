@@ -1,0 +1,3 @@
+aws iam create-service-linked-role --aws-service-name es.amazonaws.com
+aws cloudformation create-stack --stack-name aws-cvtheque --template-body file://backend.yml --parameters file://backend.json --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" --region=eu-west-3
+aws cloudformation delete-stack --stack-name aws-cvtheque

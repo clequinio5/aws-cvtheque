@@ -1,0 +1,236 @@
+Description: >
+  AWS CVtheque backend
+
+Parameters:
+  ID:
+    Description: Unique identifier
+    Type: String
+    Default: "UUID"
+  BucketName:
+    Description: S3 Bucket Name
+    Type: String
+    Default: aws-cvtheque-bucket
+  ESDomain:
+    Description: ES Domain Name
+    Type: String
+    Default: aws-cvtheque
+  ESVersion:
+    Description: ES Version
+    Type: String
+    Default: 7.10
+  ESInstanceType:
+    Type: String
+    Default: t3.small.elasticsearch
+
+Resources:
+  #Commun
+  # VPC:
+  #   Type: "AWS::EC2::VPC"
+  #   Properties:
+  #     CidrBlock: 10.0.0.0/16
+
+  # PublicSubnetOne:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref VPC
+  #     AvailabilityZone: !Select [0, !GetAZs ""]
+  #     CidrBlock: 10.0.1.0/24
+  #     MapPublicIpOnLaunch: true
+
+  # InternetGateway:
+  #   Type: AWS::EC2::InternetGateway
+
+  # GatewayAttachement:
+  #   Type: AWS::EC2::VPCGatewayAttachment
+  #   Properties:
+  #     VpcId: !Ref VPC
+  #     InternetGatewayId: !Ref InternetGateway
+
+  # PublicRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPC
+
+  # PublicRoute:
+  #   Type: AWS::EC2::Route
+  #   DependsOn: GatewayAttachement
+  #   Properties:
+  #     RouteTableId: !Ref PublicRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     GatewayId: !Ref InternetGateway
+
+  # PublicSubnetOneRouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId: !Ref PublicSubnetOne
+  #     RouteTableId: !Ref PublicRouteTable
+
+  # BUCKET
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            # Filter:
+            #   S3Key:
+            #     Rules:
+            #       - Name: prefix
+            #         Value: test/
+            #       - Name: suffix
+            #         Value: .txt
+            Function: !GetAtt Lambda.Arn
+
+  # ELASTICSEARCH SERVICE
+  ESSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: "Elasticsearch Security Group"
+      GroupDescription: "Security for Elasticsearch Cluster"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 9200
+          ToPort: 9200
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  ESCluster:
+    Type: "AWS::Elasticsearch::Domain"
+    Properties:
+      DomainName: !Ref ESDomain
+      ElasticsearchVersion: !Ref ESVersion
+      ElasticsearchClusterConfig:
+        InstanceCount: 2
+        InstanceType: !Ref ESInstanceType
+      EBSOptions:
+        EBSEnabled: "true"
+        Iops: 0
+        VolumeSize: 10
+        VolumeType: gp2
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: 4
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: "es:*"
+            Resource: "*"
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: "true"
+      VPCOptions:
+        SubnetIds:
+          - Ref: PublicSubnet
+        SecurityGroupIds:
+          - Ref: ESSecurityGroup
+    Tags:
+      - Key: Name
+        Value: !Sub es-${ID}
+
+  # FSCRAWLER SERVICE
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "FSCrawler Security Group"
+      GroupDescription: "Security for FSCrawler"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 9200
+          ToPort: 9200
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SecurityGroups:
+        - Ref: InstanceSecurityGroup
+      KeyName: fscrawler
+      ImageId: ami-0d3f551818b21ed81 #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
+      Tags:
+        - Key: Name
+          Value: !Sub fscrawler-${ID}
+
+  # LAMBDA
+  LambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: s3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                Resource:
+                  - !Sub arn:aws:s3:::${BucketName}
+                  - !Sub arn:aws:s3:::${BucketName}/*
+
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Lambda
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${BucketName}
+
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaIAMRole.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          print('Loading function')
+
+          def lambda_handler(event, context):
+              print("Received event: " + json.dumps(event, indent=2))
+              #curl -F "file=@test.txt" "http://127.0.0.1:8080/fscrawler/_upload"
+              responseData={}
+
+      Runtime: python3.6
+      Timeout: 50
+
+Outputs:
+  ESDomain:
+    Value:
+      "Fn::GetAtt":
+        - ESCluster
+        - DomainArn
+  ESDomainEndpoint:
+    Value:
+      "Fn::GetAtt":
+        - ESCluster
+        - DomainEndpoint
+  ESSecurityGroupId:
+    Value:
+      Ref: ESSecurityGroup
+  ESSubnetId:
+    Value:
+      Ref: PublicSubnet

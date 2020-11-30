@@ -1,8 +1,94 @@
 version: 2.1
 jobs:
   build:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            echo "Build ok"
   test:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: |
+            echo "Test ok"
   analyse:
-  deploy:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Analyse
+          command: |
+            echo "Analyse ok"
+
+  deploy-infra-with-aws:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Infra - Enable trigger on S3 bucket
+          command: |
+            aws iam create-service-linked-role --aws-service-name es.amazonaws.com
+      - run:
+          name: Infra - Build with AWS
+          command: |
+            aws cloudformation deploy \
+              --stack-name "aws-cvtheque-${CIRCLE_WORKFLOW_ID:0:8}" \
+              --template-file file://.circleci/aws-infra/backend.yml \
+              --parameters file://.circleci/aws-infra/backend.json \
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+              --parameter-overrides DeployID="${CIRCLE_WORKFLOW_ID:0:8}" \
+              --region=eu-west-3
+      - run:
+          name: Infra - Write in Ansible conf where is the dedicated FsCrawler server
+          command: |
+            FSCRAWLER_SERVER_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=fscrawler-${CIRCLE_WORKFLOW_ID:0:8}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+
+            echo ${FSCRAWLER_SERVER_IP} >> .circleci/ansible/hosts
+            cat .circleci/ansible/hosts
+
+            sed -i 's/fscrawler_host/${FSCRAWLER_SERVER_IP}/g' .circleci/ansible/roles/fscrawler/files/_settings.json
+            cat .circleci/ansible/roles/fscrawler/files/_settings.json
+
+      - run:
+          name: Infra - Write in FsCrawler conf where is the ESCluster
+          command: |
+            ES_DOMAIN_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=es-${CIRCLE_WORKFLOW_ID:0:8}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+              
+            sed -i 's/es_host/${ES_DOMAIN_IP}/g' .circleci/ansible/roles/fscrawler/files/_settings.json
+            cat .circleci/ansible/roles/fscrawler/files/_settings.json
+
+  configure-infra-with-ansible:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - add_ssh_keys:
+          fingerprints: ["b2:c9:d7:96:c5:e9:4d:22:29:63:df:4d:8c:2f:64:7f"]
+      - run:
+          name: Install Ansible
+          command: apk add --update ansible
+      - run:
+          name: Install FsCrawler as a rest service and configure it
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i hosts configure-infra.yml
+
   verify:
   promote:
