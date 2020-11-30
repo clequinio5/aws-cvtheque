@@ -50,12 +50,12 @@ jobs:
       - run:
           name: Infra - Write in Ansible conf where is the dedicated FsCrawler server
           command: |
-            FSCRAWLER_SERVER_IP=$(aws ec2 describe-instances \
+            FSCRAWLER_SERVER_IP=(aws ec2 describe-instances \
               --filters "Name=tag:Name,Values=fscrawler-${CIRCLE_WORKFLOW_ID:0:8}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
 
-            echo ${FSCRAWLER_SERVER_IP} >> .circleci/ansible/hosts
+            echo $FSCRAWLER_SERVER_IP >> .circleci/ansible/hosts
             cat .circleci/ansible/hosts
 
             sed -i 's/fscrawler_host/${FSCRAWLER_SERVER_IP}/g' .circleci/ansible/roles/fscrawler/files/_settings.json
@@ -64,12 +64,12 @@ jobs:
       - run:
           name: Infra - Write in FsCrawler conf where is the ESCluster
           command: |
-            ES_DOMAIN_IP=$(aws ec2 describe-instances \
+            ES_DOMAIN_IP=(aws ec2 describe-instances \
               --filters "Name=tag:Name,Values=es-${CIRCLE_WORKFLOW_ID:0:8}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
               
-            sed -i 's/es_host/${ES_DOMAIN_IP}/g' .circleci/ansible/roles/fscrawler/files/_settings.json
+            sed -i 's/es_host/$ES_DOMAIN_IP/g' .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
 
   configure-infra-with-ansible:

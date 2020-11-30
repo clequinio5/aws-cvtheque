@@ -10,3 +10,10 @@
 
 ## Deploy
 
+CircleCI Project environment variables:
+
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+```
+
