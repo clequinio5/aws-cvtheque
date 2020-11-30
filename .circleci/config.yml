@@ -91,4 +91,38 @@ jobs:
             ansible-playbook -i hosts configure-infra.yml
 
   verify:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Verify
+          command: |
+            echo "Verify ok"
+
   promote:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Promote
+          command: |
+            echo "Promote ok"
+
+workflows:
+  default:
+    jobs:
+      - build
+      - test:
+          requires: [build]
+      - analyse:
+          requires: [test]
+      - deploy-infra-with-aws:
+          requires: [analyse]
+      - configure-infra-with-ansible:
+          requires: [deploy-infra-with-aws]
+      - verify:
+          requires: [configure-infra-with-ansible]
+      - promote:
+          requires: [verify]
