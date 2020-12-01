@@ -32,13 +32,13 @@ Resources:
   # BUCKET
   S3Bucket:
     Type: AWS::S3::Bucket
-    DependsOn: [Lambda]
+    DependsOn: Lambda
     Properties:
       BucketName: !Sub bucket-${ID}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
-            Function: !GetAtt Lambda.Arn
+            Function: !Ref Lambda
 
   # ELASTICSEARCH SERVICE
   ESSecurityGroup:
@@ -118,7 +118,8 @@ Resources:
       SecurityGroups:
         - Ref: FSCrawlerSecurityGroup
       KeyName: fscrawler
-      ImageId: ami-0d3f551818b21ed81 #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
+      #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
+      ImageId: ami-0d3f551818b21ed81
       Tags:
         - Key: Name
           Value: !Sub fscrawler-${ID}
@@ -176,6 +177,9 @@ Resources:
       Timeout: 50
 
 Outputs:
+  S3BucketSecureURL:
+    Value: !Join ["", ["https://", !GetAtt S3Bucket.DomainName]]
+    Description: Name of S3 bucket
   ESDomain:
     Value:
       "Fn::GetAtt":
