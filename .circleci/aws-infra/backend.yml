@@ -33,7 +33,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: cvtheque-bucket-${ID}
+      BucketName: !Sub bucket-${ID}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
@@ -66,7 +66,7 @@ Resources:
   ESCluster:
     Type: "AWS::Elasticsearch::Domain"
     Properties:
-      DomainName: es-${ID}
+      DomainName: !Sub es-${ID}
       ElasticsearchVersion: !Ref ESVersion
       ElasticsearchClusterConfig:
         InstanceCount: 2
@@ -150,8 +150,8 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::cvtheque-bucket-${ID}
-                  - !Sub arn:aws:s3:::cvtheque-bucket-${ID}/*
+                  - !Sub arn:aws:s3:::bucket-${ID}
+                  - !Sub arn:aws:s3:::bucket-${ID}/*
 
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
