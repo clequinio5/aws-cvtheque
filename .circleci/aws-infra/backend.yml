@@ -58,7 +58,7 @@ Resources:
   ESSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupName: "Elasticsearch Security Group"
+      GroupName: !Sub es-sg-${ID}
       GroupDescription: "Security for Elasticsearch Cluster"
       VpcId: !Ref VPC
       SecurityGroupIngress:
