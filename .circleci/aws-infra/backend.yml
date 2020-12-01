@@ -32,9 +32,9 @@ Resources:
   # BUCKET
   S3Bucket:
     Type: AWS::S3::Bucket
+    DependsOn: [Lambda]
     Properties:
       BucketName: !Sub bucket-${ID}
-      DependsOn: [Lambda]
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
