@@ -6,6 +6,10 @@ Parameters:
     Description: Unique identifier
     Type: String
     Default: "UUID"
+  BucketName:
+    Description: Bucket Name
+    Type: String
+    Default: cvtheque-bucket
   ESVersion:
     Description: ES Version
     Type: String
@@ -34,7 +38,7 @@ Resources:
     Type: AWS::S3::Bucket
     DependsOn: Lambda
     Properties:
-      BucketName: !Sub bucket-${ID}
+      BucketName: !Sub ${BucketName}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
@@ -145,8 +149,8 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::bucket-${ID}
-                  - !Sub arn:aws:s3:::bucket-${ID}/*
+                  - !Sub arn:aws:s3:::${BucketName}
+                  - !Sub arn:aws:s3:::${BucketName}/*
 
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -155,7 +159,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref Lambda
       Principal: s3.amazonaws.com
-      SourceArn: !Sub arn:aws:s3:::bucket-${ID}
+      SourceArn: !Sub arn:aws:s3:::${BucketName}
 
   Lambda:
     Type: AWS::Lambda::Function
