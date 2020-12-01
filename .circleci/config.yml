@@ -63,7 +63,6 @@ jobs:
             STR="s/fscrawler_host/${FSCRAWLER_SERVER_IP}/g"
             sed -i ${STR} .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
-
       - run:
           name: Infra - Write in FsCrawler conf where is the ESCluster
           command: |
@@ -76,7 +75,8 @@ jobs:
             STR="s/es_host/${ES_DOMAIN_IP}/g"
             sed -i ${STR} .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
-
+      # Require tar for the persist_to_workspace step
+      - run: yum -y install tar gzip
       - persist_to_workspace:
           root: ~/
           paths:
