@@ -6,14 +6,6 @@ Parameters:
     Description: Unique identifier
     Type: String
     Default: "UUID"
-  BucketName:
-    Description: S3 Bucket Name
-    Type: String
-    Default: aws-cvtheque-bucket
-  ESDomain:
-    Description: ES Domain Name
-    Type: String
-    Default: aws-cvtheque
   ESVersion:
     Description: ES Version
     Type: String
@@ -41,7 +33,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Ref BucketName
+      BucketName: bucket-${ID}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
@@ -74,7 +66,7 @@ Resources:
   ESCluster:
     Type: "AWS::Elasticsearch::Domain"
     Properties:
-      DomainName: !Ref ESDomain
+      DomainName: es-${ID}
       ElasticsearchVersion: !Ref ESVersion
       ElasticsearchClusterConfig:
         InstanceCount: 2
@@ -158,8 +150,8 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::${BucketName}
-                  - !Sub arn:aws:s3:::${BucketName}/*
+                  - !Sub arn:aws:s3:::bucket-${ID}
+                  - !Sub arn:aws:s3:::bucket-${ID}/*
 
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -167,7 +159,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref Lambda
       Principal: s3.amazonaws.com
-      SourceArn: !Sub arn:aws:s3:::${BucketName}
+      SourceArn: !Sub arn:aws:s3:::bucket-${ID}
 
   Lambda:
     Type: AWS::Lambda::Function

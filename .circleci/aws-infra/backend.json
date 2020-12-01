@@ -1,6 +1,10 @@
 [
     {
-        "ParameterKey": "BucketName",
-        "ParameterValue": "aws-cvtheque-s3-bucket"
+        "ParameterKey": "ESVersion",
+        "ParameterValue": "7.10"
+    },
+    {
+        "ParameterKey": "ESInstanceType",
+        "ParameterValue": "t3.small.elasticsearch"
     }
 ]
