@@ -33,7 +33,7 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: bucket-${ID}
+      BucketName: cvtheque-bucket-${ID}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
@@ -150,8 +150,8 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::bucket-${ID}
-                  - !Sub arn:aws:s3:::bucket-${ID}/*
+                  - !Sub arn:aws:s3:::cvtheque-bucket-${ID}
+                  - !Sub arn:aws:s3:::cvtheque-bucket-${ID}/*
 
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -159,7 +159,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref Lambda
       Principal: s3.amazonaws.com
-      SourceArn: !Sub arn:aws:s3:::bucket-${ID}
+      SourceArn: !Ref S3Bucket
 
   Lambda:
     Type: AWS::Lambda::Function
