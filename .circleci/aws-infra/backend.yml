@@ -6,10 +6,6 @@ Parameters:
     Description: Unique identifier
     Type: String
     Default: "UUID"
-  BucketName:
-    Description: Bucket Name
-    Type: String
-    Default: cvtheque-bucket
   ESVersion:
     Description: ES Version
     Type: String
