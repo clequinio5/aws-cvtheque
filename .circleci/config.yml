@@ -43,7 +43,7 @@ jobs:
             aws cloudformation deploy \
               --stack-name "aws-cvtheque-${CIRCLE_WORKFLOW_ID:0:8}" \
               --template-file file://.circleci/aws-infra/backend.yml \
-              --parameters file://.circleci/aws-infra/backend.json \
+              --parameter file://.circleci/aws-infra/backend.json \
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
               --parameter-overrides DeployID="${CIRCLE_WORKFLOW_ID:0:8}" \
               --region=eu-west-3
