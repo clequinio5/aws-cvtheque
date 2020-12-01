@@ -63,7 +63,7 @@ Resources:
       DomainName: !Sub es-${ID}
       ElasticsearchVersion: !Ref ESVersion
       ElasticsearchClusterConfig:
-        InstanceCount: 2
+        InstanceCount: 1
         InstanceType: !Ref ESInstanceType
       EBSOptions:
         EBSEnabled: "true"
@@ -75,7 +75,7 @@ Resources:
       AccessPolicies:
         Version: "2012-10-17"
         Statement:
-          - Effect: Deny
+          - Effect: Allow
             Principal:
               AWS: "*"
             Action: "es:*"
