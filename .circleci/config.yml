@@ -36,8 +36,7 @@ jobs:
       - run:
           name: Infra - Enable trigger on S3 bucket
           command: |
-            aws iam create-service-linked-role --aws-service-name es.amazonaws.com
-          when: always
+            aws iam create-service-linked-role --aws-service-name es.amazonaws.com || exit 0
       - run:
           name: Infra - Build with AWS
           command: |
