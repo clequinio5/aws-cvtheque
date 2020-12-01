@@ -29,6 +29,15 @@ Resources:
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
 
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
   # BUCKET
   S3Bucket:
     Type: AWS::S3::Bucket
@@ -112,7 +121,7 @@ Resources:
           ToPort: 9200
           CidrIp: 0.0.0.0/0
 
-  EC2Instance:
+  FSCrawlerServer:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
@@ -190,4 +199,4 @@ Outputs:
   ESSubnetId:
     Value: !Ref PublicSubnet
   FSCrawlerServer:
-    Value: !GetAtt EC2Instance.PublicDnsName
+    Value: !GetAtt FSCrawlerServer.PublicIp
