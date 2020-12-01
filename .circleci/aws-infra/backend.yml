@@ -34,17 +34,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub bucket-${ID}
+      DependsOn: [Lambda]
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
-            # Filter:
-            #   S3Key:
-            #     Rules:
-            #       - Name: prefix
-            #         Value: test/
-            #       - Name: suffix
-            #         Value: .txt
-            Function: !GetAtt Lambda.Arn
+            Function: !Ref Lambda
 
   # ELASTICSEARCH SERVICE
   ESSecurityGroup:
