@@ -57,12 +57,12 @@ jobs:
               --region eu-west-3 \
               --output text)
 
-            echo "[fscrawler]" > .circleci/ansible/hosts
             echo "${FSCRAWLER_SERVER_IP}" >> .circleci/ansible/hosts
             cat .circleci/ansible/hosts
 
-            STR='s/fscrawler_host/${FSCRAWLER_SERVER_IP}/g'
-            sed -i $STR .circleci/ansible/roles/fscrawler/files/_settings.json
+            STR="s/fscrawler_host/${FSCRAWLER_SERVER_IP}/g"
+            echo "${STR}"
+            sed -i ${STR} .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
 
       - run:
@@ -74,8 +74,9 @@ jobs:
               --region eu-west-3 \
               --output text)
 
-            STR='s/es_host/${ES_DOMAIN_IP}/g'
-            sed -i $STR .circleci/ansible/roles/fscrawler/files/_settings.json
+            STR="s/es_host/${ES_DOMAIN_IP}/g"
+            echo "${STR}"
+            sed -i ${STR} .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
 
   configure-infra-with-ansible:
