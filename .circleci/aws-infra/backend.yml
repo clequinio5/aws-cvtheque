@@ -97,6 +97,7 @@ Resources:
     Properties:
       GroupName: !Sub fscrawler-sg-${ID}
       GroupDescription: "Security for FSCrawler"
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -115,8 +116,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      SecurityGroups:
-        - Ref: FSCrawlerSecurityGroup
+      SecurityGroups: !Ref FSCrawlerSecurityGroup
       KeyName: fscrawler
       #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
       ImageId: ami-0d3f551818b21ed81
