@@ -38,7 +38,7 @@ Resources:
     Type: AWS::S3::Bucket
     DependsOn: Lambda
     Properties:
-      BucketName: !Sub ${BucketName}
+      BucketName: !Sub bucket-${ID}
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
@@ -149,8 +149,8 @@ Resources:
                 Action:
                   - s3:Get*
                 Resource:
-                  - !Sub arn:aws:s3:::${BucketName}
-                  - !Sub arn:aws:s3:::${BucketName}/*
+                  - !Sub arn:aws:s3:::bucket-${ID}
+                  - !Sub arn:aws:s3:::bucket-${ID}/*
 
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -159,7 +159,7 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref Lambda
       Principal: s3.amazonaws.com
-      SourceArn: !Sub arn:aws:s3:::${BucketName}
+      SourceArn: !Sub arn:aws:s3:::bucket-${ID}
 
   Lambda:
     Type: AWS::Lambda::Function

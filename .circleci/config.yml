@@ -46,7 +46,7 @@ jobs:
               --template-file .circleci/aws-infra/backend.yml \
               --parameter .circleci/aws-infra/backend.json \
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:8}" BucketName="bucket-${CIRCLE_WORKFLOW_ID:0:8}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:8}" \
               --region eu-west-3
       - run:
           name: Infra - Write in Ansible conf where is the dedicated FsCrawler server
@@ -92,6 +92,7 @@ jobs:
           name: Install FsCrawler as a rest service and configure it
           command: |
             cd .circleci/ansible
+            cat hosts
             ansible-playbook -i hosts configure-infra.yml
 
   verify:
