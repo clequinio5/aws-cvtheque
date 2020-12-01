@@ -116,7 +116,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      SecurityGroups:
+      SecurityGroupIds:
         - Ref: FSCrawlerSecurityGroup
       KeyName: fscrawler
       #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
