@@ -120,6 +120,7 @@ Resources:
       KeyName: fscrawler
       #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
       ImageId: ami-0d3f551818b21ed81
+      SubnetId: !Ref PublicSubnet
       Tags:
         - Key: Name
           Value: !Sub fscrawler-${ID}
@@ -179,20 +180,13 @@ Resources:
 Outputs:
   S3BucketSecureURL:
     Value: !Join ["", ["https://", !GetAtt S3Bucket.DomainName]]
-    Description: Name of S3 bucket
   ESDomain:
-    Value:
-      "Fn::GetAtt":
-        - ESCluster
-        - DomainArn
+    Value: !GetAtt ESCluster.DomainArn
   ESDomainEndpoint:
-    Value:
-      "Fn::GetAtt":
-        - ESCluster
-        - DomainEndpoint
+    Value: !GetAtt ESCluster.DomainEndpoint
   ESSecurityGroupId:
-    Value:
-      Ref: ESSecurityGroup
+    Value: !Ref ESSecurityGroup
   ESSubnetId:
-    Value:
-      Ref: PublicSubnet
+    Value: !Ref PublicSubnet
+  FSCrawlerServer:
+    Value: !GetAtt EC2Instance.PublicDnsName
