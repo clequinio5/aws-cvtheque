@@ -28,6 +28,7 @@ Resources:
   VPC:
     Type: "AWS::EC2::VPC"
     Properties:
+      EnableDnsHostnames: true
       CidrBlock: 10.0.0.0/16
 
   PublicRouteTable:
@@ -54,7 +55,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: 10.0.1.0/24
+      CidrBlock: 10.0.0.0/24
       MapPublicIpOnLaunch: true
 
   # BUCKET
