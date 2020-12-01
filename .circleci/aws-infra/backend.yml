@@ -129,9 +129,9 @@ Resources:
           - Ref: PublicSubnet
         SecurityGroupIds:
           - Ref: ESSecurityGroup
-    Tags:
-      - Key: Name
-        Value: !Sub es-${ID}
+      Tags:
+        - Key: Name
+          Value: !Sub es-${ID}
 
   # FSCRAWLER SERVICE
   InstanceSecurityGroup:
