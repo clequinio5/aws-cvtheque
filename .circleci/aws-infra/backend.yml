@@ -29,6 +29,7 @@ Resources:
     Type: "AWS::EC2::VPC"
     Properties:
       EnableDnsHostnames: true
+      EnableDnsSupport: true
       CidrBlock: 10.0.0.0/16
 
   PublicRouteTable:
@@ -133,6 +134,10 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
           CidrIp: 0.0.0.0/0
@@ -219,4 +224,4 @@ Outputs:
   ESSubnetId:
     Value: !Ref PublicSubnet
   FSCrawlerServer:
-    Value: !GetAtt FSCrawlerServer.PublicIp
+    Value: !GetAtt FSCrawlerServer.PublicDnsName
