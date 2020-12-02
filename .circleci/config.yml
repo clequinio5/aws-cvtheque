@@ -76,7 +76,9 @@ jobs:
             sed -i ${STR} .circleci/ansible/roles/fscrawler/files/_settings.json
             cat .circleci/ansible/roles/fscrawler/files/_settings.json
       # Require tar for the persist_to_workspace step
-      - run: yum -y install tar gzip
+      - run:
+          name: Install librairies require to persist_on_workspace
+          command: yum -y install tar gzip
       - persist_to_workspace:
           root: ~/
           paths:

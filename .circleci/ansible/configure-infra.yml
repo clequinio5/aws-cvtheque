@@ -1,5 +1,5 @@
 - name: "Install FSCrawler"
-  hosts: fscrawler
+  hosts: web
   user: ubuntu
   roles:
     - fscrawler
