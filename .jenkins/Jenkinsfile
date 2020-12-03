@@ -17,7 +17,6 @@ pipeline {
             }
         }
         stage('deploy') {
-            agent { docker { image 'jenkins/aws-cli' }}
             steps {
                 sh 'aws --version'
             }
