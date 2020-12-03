@@ -1,63 +1,325 @@
-Description: >
-  AWS CVtheque backend
+AWSTemplateFormatVersion: 2010-09-09
 
+Description: >-
+  Provisions and deploys AWS Elasticsearch Service (ES) over multiple
+  availability zones in a new AWS Virtual Private Cloud (VPC), along with a
+  FSCrawler server from which Elasticsearch can be accessed.
 Parameters:
   ID:
-    Description: Unique identifier
+    Description: >-
+      CD unique ID.
     Type: String
-    Default: "UUID"
-  ESVersion:
-    Description: ES Version
+    Default: UUID
+  ElasticsearchName:
+    Description: >-
+      The name of the AWS Elasticsearch Service deployment.
     Type: String
-    Default: 7.10
-  ESInstanceType:
+    ConstraintDescription: >-
+      Must be a valid AWS ES domain name prefix. The name must start with a
+      lowercase letter and must be between 3 and 28 characters. Valid characters
+      are a-z (lowercase only), 0-9, and - (hyphen).
+    AllowedPattern: '[a-z][a-z0-9\\-]+'
+
+  ElasticsearchVersion:
+    Default: 7.4
     Type: String
-    Default: t3.small.elasticsearch
+    ConstraintDescription: >-
+      Must be an allowed AWS ES version (Major.Minor)
+    AllowedValues:
+      - 7.4
+      - 7.1
+      - 6.8
+      - 6.7
+      - 6.5
+      - 6.4
+      - 6.3
+      - 6.2
+      - 6.0
+      - 5.6
+      - 5.5
+      - 5.3
+      - 5.1
+      - 2.3
+      - 1.5
+
+  ElasticsearchMasterInstanceType:
+    Description: >-
+      Instance type for master nodes.
+    Type: String
+    Default: t2.small.elasticsearch
+
+  ElasticsearchDataInstanceType:
+    Description: >-
+      Instance type for data nodes.
+    Type: String
+    Default: t2.small.elasticsearch
+
+  NumberOfMasterNodes:
+    Description: >-
+      How many dedicated master nodes you want to have. 3 is recommended.
+    Type: Number
+    Default: 3
+    AllowedValues:
+      - 3
+      - 5
+
+  NumberOfDataNodes:
+    Description: >-
+      How many data nodes you want to have. Multiples of your number of
+      availability zones (2) is recommended.
+    Type: Number
+    Default: 2
+    MinValue: 2
+    MaxValue: 20
+
+  FSCrawlerKeyName:
+    Description: >-
+      Name of the EC2 KeyPair, which enables SSH access to the FSCrawler server.
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: >-
+      Must be the name of an existing EC2 KeyPair.
+
+  AccessLocation:
+    Description: >-
+      CIDR range from which SSH access to the FSCrawler server is allowed. Default
+      is anywhere.
+    Type: String
+    Default: "0.0.0.0/0"
+    ConstraintDescription: >-
+      Must be a valid CIDR range.
+    MinLength: 9
+    MaxLength: 18
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+
+  AvailabilityZone1:
+    Type: String
+    ConstraintDescription: >-
+      Must be a valid AWS Availability Zone in eu-west-3.
+    Default: eu-west-3a
+    AllowedValues:
+      - eu-west-3a
+      - eu-west-3b
+      - eu-west-3c
+
+  AvailabilityZone2:
+    Type: String
+    ConstraintDescription: >-
+      Must be a valid AWS Availability Zone in eu-west-3.
+    Default: eu-west-3b
+    AllowedValues:
+      - eu-west-3a
+      - eu-west-3b
+      - eu-west-3c
+
+Mappings:
+  CidrConfig:
+    VPC:
+      CIDR: 10.0.0.0/16
+    Public1:
+      CIDR: 10.0.0.0/24
+    Public2:
+      CIDR: 10.0.1.0/24
 
 Resources:
-  #Commun
+  # Commun
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      CidrBlock: !FindInMap
+        - CidrConfig
+        - VPC
+        - CIDR
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
 
-  VPC:
-    Type: "AWS::EC2::VPC"
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
     Properties:
-      EnableDnsHostnames: true
-      EnableDnsSupport: true
-      CidrBlock: 10.0.0.0/16
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref AvailabilityZone1
+      CidrBlock: !FindInMap
+        - CidrConfig
+        - Public1
+        - CIDR
+      MapPublicIpOnLaunch: true
 
-  PublicRouteTable:
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Ref AvailabilityZone2
+      CidrBlock: !FindInMap
+        - CidrConfig
+        - Public2
+        - CIDR
+      MapPublicIpOnLaunch: true
+
+  PublicRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
 
-  DefaultPublicRoute:
+  PublicRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable1
+
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable2
+
+  PublicRoute1:
     Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
     Properties:
-      RouteTableId: !Ref PublicRouteTable
+      RouteTableId: !Ref PublicRouteTable1
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  PublicSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicRoute2:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
     Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
-  PublicSubnet:
-    Type: AWS::EC2::Subnet
+  # EC2 Instance
+  FSCrawlerElasticIp:
+    Type: AWS::EC2::EIP
+
+  FSCrawlerElasticIPAssociation:
+    Type: AWS::EC2::EIPAssociation
     Properties:
+      InstanceId: !Ref FSCrawlerInstance
+      EIP: !Ref FSCrawlerElasticIp
+
+  FSCrawlerInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref FSCrawlerKeyName
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref FSCrawlerSecurityGroup
+      # Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
+      ImageId: ami-0d3f551818b21ed81
+      Tags:
+        - Key: Name
+          Value: !Sub "FSCrawlerInstance-${ID}"
+
+  FSCrawlerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Allows all ingress from AccessLocation.
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: 10.0.0.0/24
-      MapPublicIpOnLaunch: true
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref AccessLocation
+
+  ReceiveFromFSCrawlerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Allows all ingress from FSCrawlerSecurityGroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          SourceSecurityGroupId: !Ref FSCrawlerSecurityGroup
+
+  # ES DOMAIN
+  ElasticsearchDomain:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      ElasticsearchVersion: !Ref ElasticsearchVersion
+      DomainName: !Ref ElasticsearchName
+      EBSOptions:
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 10
+        VolumeType: gp2
+      ElasticsearchClusterConfig:
+        # DedicatedMasterEnabled: true
+        # DedicatedMasterType: !Ref ElasticsearchMasterInstanceType
+        # DedicatedMasterCount: !Ref NumberOfMasterNodes
+        InstanceCount: !Ref NumberOfDataNodes
+        InstanceType: !Ref ElasticsearchDataInstanceType
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: true
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: 0
+      VPCOptions:
+        SubnetIds:
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
+        SecurityGroupIds:
+          - !GetAtt ElasticsearchSecurityGroup.GroupId
+          - !GetAtt ReceiveFromElasticsearchSecurityGroup.GroupId
+          - !GetAtt ReceiveFromFSCrawlerSecurityGroup.GroupId
+      AccessPolicies:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: es:*
+            Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchName}/*"
+      Tags:
+        - Key: Name
+          Value: !Sub "EsDomain-${ID}"
+
+  ElasticsearchSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Identifies resources, which should have access to one another.
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "EsSg-${ID}"
+
+  ReceiveFromElasticsearchSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Allows ingress from ElasticsearchSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          SourceSecurityGroupId: !GetAtt ElasticsearchSecurityGroup.GroupId
+      Tags:
+        - Key: Name
+          Value: !Sub "ReceiveFromEsSg-${ID}"
 
   # BUCKET
   S3Bucket:
@@ -69,96 +331,6 @@ Resources:
         LambdaConfigurations:
           - Event: "s3:ObjectCreated:*"
             Function: !GetAtt Lambda.Arn
-
-  # ELASTICSEARCH SERVICE
-  ESSecurityGroup:
-    Type: "AWS::EC2::SecurityGroup"
-    Properties:
-      GroupName: !Sub es-sg-${ID}
-      GroupDescription: "Security for Elasticsearch Cluster"
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 9200
-          ToPort: 9200
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-
-  ESCluster:
-    Type: "AWS::Elasticsearch::Domain"
-    Properties:
-      DomainName: !Sub es-${ID}
-      ElasticsearchVersion: !Ref ESVersion
-      ElasticsearchClusterConfig:
-        InstanceCount: 1
-        InstanceType: !Ref ESInstanceType
-      EBSOptions:
-        EBSEnabled: "true"
-        Iops: 0
-        VolumeSize: 10
-        VolumeType: gp2
-      SnapshotOptions:
-        AutomatedSnapshotStartHour: 4
-      AccessPolicies:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: "*"
-            Action: "es:*"
-            Resource: "*"
-      AdvancedOptions:
-        rest.action.multi.allow_explicit_index: "true"
-      VPCOptions:
-        SubnetIds:
-          - Ref: PublicSubnet
-        SecurityGroupIds:
-          - Ref: ESSecurityGroup
-      Tags:
-        - Key: Name
-          Value: !Sub es-${ID}
-
-  # FSCRAWLER SERVICE
-  FSCrawlerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub fscrawler-sg-${ID}
-      GroupDescription: "Security for FSCrawler"
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 9200
-          ToPort: 9200
-          CidrIp: 0.0.0.0/0
-
-  FSCrawlerServer:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - Ref: FSCrawlerSecurityGroup
-      KeyName: fscrawler
-      #Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-0d3f551818b21ed81
-      ImageId: ami-0d3f551818b21ed81
-      SubnetId: !Ref PublicSubnet
-      Tags:
-        - Key: Name
-          Value: !Sub fscrawler-${ID}
 
   # LAMBDA
   LambdaIAMRole:
@@ -215,13 +387,15 @@ Resources:
 Outputs:
   S3BucketSecureURL:
     Value: !Join ["", ["https://", !GetAtt S3Bucket.DomainName]]
-  ESDomain:
-    Value: !GetAtt ESCluster.DomainArn
+    Export:
+      Name: !Sub "S3BucketSecureURL-${ID}"
+
   ESDomainEndpoint:
-    Value: !GetAtt ESCluster.DomainEndpoint
-  ESSecurityGroupId:
-    Value: !Ref ESSecurityGroup
-  ESSubnetId:
-    Value: !Ref PublicSubnet
-  FSCrawlerServer:
+    Value: !GetAtt ElasticsearchDomain.DomainEndpoint
+    Export:
+      Name: !Sub "ESDomainEndpoint-${ID}"
+
+  FSCrawlerPublicIp:
     Value: !GetAtt FSCrawlerServer.PublicDnsName
+    Export:
+      Name: !Sub "FSCrawlerPublicIp-${ID}"
