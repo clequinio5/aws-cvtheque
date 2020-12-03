@@ -1,9 +1,24 @@
 pipeline {
-    agent { docker { image 'node:14-alpine' } }
     stages {
         stage('build') {
             steps {
-                sh 'npm --version'
+                sh 'echo "build"'
+            }
+        }
+        stage('test') {
+            steps {
+                sh 'echo "test"'
+            }
+        }
+        stage('analyse') {
+            steps {
+                sh 'echo "analyse"'
+            }
+        }
+        stage('deploy') {
+            agent { docker { image 'jenkins/aws-cli' }}
+            steps {
+                sh 'aws --version'
             }
         }
     }
