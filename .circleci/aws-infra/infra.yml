@@ -14,7 +14,7 @@ Parameters:
     Description: >-
       The name of the AWS Elasticsearch Service deployment.
     Type: String
-    Default: ESDomain
+    Default: es-domain
 
   ElasticsearchVersion:
     Default: 7.4

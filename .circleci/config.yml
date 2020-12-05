@@ -58,7 +58,7 @@ jobs:
               --template-file .circleci/aws-infra/infra.yml \
               --parameter .circleci/aws-infra/infra.json \
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:8}" ElasticsearchName="ESDomain-${CIRCLE_WORKFLOW_ID:0:8}"\
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:8}" ElasticsearchName="es-domain-${CIRCLE_WORKFLOW_ID:0:8}"\
               --region eu-west-3
       - run:
           name: Infra - Write in Ansible conf where is the dedicated FsCrawler server

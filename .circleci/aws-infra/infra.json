@@ -5,7 +5,7 @@
     },
     {
         "ParameterKey": "ElasticsearchName",
-        "ParameterValue": "ESDomain"
+        "ParameterValue": "es-domain"
     },
     {
         "ParameterKey": "ElasticsearchMasterInstanceType",
