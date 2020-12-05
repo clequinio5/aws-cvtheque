@@ -5,7 +5,7 @@
     },
     {
         "ParameterKey": "ElasticsearchName",
-        "ParameterValue": "t3.small.elasticsearch"
+        "ParameterValue": "Elasticsearch"
     },
     {
         "ParameterKey": "ElasticsearchMasterInstanceType",
