@@ -14,11 +14,7 @@ Parameters:
     Description: >-
       The name of the AWS Elasticsearch Service deployment.
     Type: String
-    ConstraintDescription: >-
-      Must be a valid AWS ES domain name prefix. The name must start with a
-      lowercase letter and must be between 3 and 28 characters. Valid characters
-      are a-z (lowercase only), 0-9, and - (hyphen).
-    AllowedPattern: '[a-z][a-z0-9\\-]+'
+    Default: ESDomain
 
   ElasticsearchVersion:
     Default: 7.4
@@ -76,8 +72,7 @@ Parameters:
     Description: >-
       Name of the EC2 KeyPair, which enables SSH access to the FSCrawler server.
     Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: >-
-      Must be the name of an existing EC2 KeyPair.
+    Default: fscrawler
 
   AccessLocation:
     Description: >-
