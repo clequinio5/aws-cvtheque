@@ -7,8 +7,7 @@ jobs:
       - checkout
       - run:
           name: Build
-          command: |
-            echo "Build ok"
+          command: yarn install
   test:
     docker:
       - image: circleci/node:13.8.0
@@ -16,8 +15,7 @@ jobs:
       - checkout
       - run:
           name: Test
-          command: |
-            echo "Test ok"
+          command: CI=true yarn test
   analyse:
     docker:
       - image: circleci/node:13.8.0
