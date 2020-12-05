@@ -5,25 +5,41 @@ jobs:
       - image: circleci/node:latest
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - nm-{{ checksum "package.json" }}
+            - nm-
       - run:
-          name: Build
+          name: Build frontend
           command: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: nm-{{ checksum "package.json" }}
   test:
     docker:
       - image: circleci/node:latest
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - nm-{{ checksum "package.json" }}
+            - nm-
       - run:
-          name: Test
+          name: Test frontend
           command: CI=true yarn test
   analyse:
     docker:
       - image: circleci/node:latest
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - nm-{{ checksum "package.json" }}
+            - nm-
       - run:
           name: Analyse
-          command: yarn audit
+          command: yarn audit fix --audit-level=critical --force
   deploy-infra-with-aws:
     docker:
       - image: amazon/aws-cli
