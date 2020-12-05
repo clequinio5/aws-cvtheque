@@ -258,9 +258,9 @@ Resources:
         VolumeSize: 10
         VolumeType: gp2
       ElasticsearchClusterConfig:
-        # DedicatedMasterEnabled: true
-        # DedicatedMasterType: !Ref ElasticsearchMasterInstanceType
-        # DedicatedMasterCount: !Ref NumberOfMasterNodes
+        DedicatedMasterEnabled: true
+        DedicatedMasterType: !Ref ElasticsearchMasterInstanceType
+        DedicatedMasterCount: !Ref NumberOfMasterNodes
         InstanceCount: !Ref NumberOfDataNodes
         InstanceType: !Ref ElasticsearchDataInstanceType
       AdvancedOptions:
