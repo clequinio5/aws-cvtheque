@@ -39,7 +39,7 @@ jobs:
             - nm-
       - run:
           name: Analyse
-          command: yarn audit fix --audit-level=critical --force
+          command: yarn audit --level=critical
   deploy-infra-with-aws:
     docker:
       - image: amazon/aws-cli
@@ -51,7 +51,7 @@ jobs:
             aws iam create-service-linked-role --aws-service-name es.amazonaws.com || exit 0
       - run:
           name: Infra - Build with AWS
-          no_output_timeout: 30m
+          no_output_timeout: 60m
           command: |
             aws cloudformation deploy \
               --stack-name "aws-cvtheque-${CIRCLE_WORKFLOW_ID:0:8}" \
