@@ -348,6 +348,11 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:Get*
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DescribeInstances
+                  - ec2:AttachNetworkInterface
                 Resource:
                   - !Sub arn:aws:s3:::bucket-${ID}
                   - !Sub arn:aws:s3:::bucket-${ID}/*
@@ -383,34 +388,18 @@ Resources:
       Role: !GetAtt LambdaIAMRole.Arn
       Code:
         ZipFile: |
-          const fs = require('fs');
-          const request = require('request');
+          import json
+          import subprocess
 
-          const url = 'https://security.sensiolabs.org/check_lock';
+          def handler(event, context):
+            
+              bucket_name = event['Records'][0]['s3']['bucket']['name']
+              file_key_name = event['Records'][0]['s3']['object']['key']
+              print(bucket_name + file_key_name)
+              result = subprocess.call('curl -F "file=@' + bucket_name + file_key_name + '"' "http://fscrawler_host:8080/fscrawler/_upload", shell=True)
+              return result
 
-          var formData = {lock: fs.createReadStream(__dirname + '/composer.lock')};
-
-          var req = request.post(
-              {
-                  headers: {
-                    "Accept": "text/plain",
-                    "Content-Type": "multipart/form-data"
-                  },
-                  url: url,
-                  formData: formData
-              }, function(err, resp, body) 
-              {
-                  if (err) {
-                    console.log('Error!');
-                  } else {
-                    console.log(resp.statusCode);
-                    console.log('body is ' + body);
-                    console.log(JSON.stringify(resp));
-                  }
-              }
-          );
-
-      Runtime: nodejs12.x
+      Runtime: python3.6
       Timeout: 50
       VpcConfig:
         SecurityGroupIds:
