@@ -391,6 +391,6 @@ Outputs:
       Name: !Sub "ESDomainEndpoint-${ID}"
 
   FSCrawlerPublicIp:
-    Value: !GetAtt FSCrawlerServer.PublicDnsName
+    Value: !GetAtt FSCrawlerInstance.PublicDnsName
     Export:
       Name: !Sub "FSCrawlerPublicIp-${ID}"
