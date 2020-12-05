@@ -285,7 +285,7 @@ Resources:
             Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ElasticsearchName}/*"
       Tags:
         - Key: Name
-          Value: !Sub "EsDomain-${ID}"
+          Value: !Sub "ElasticsearchDomain-${ID}"
 
   ElasticsearchSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -361,6 +361,21 @@ Resources:
       Principal: s3.amazonaws.com
       SourceArn: !Sub arn:aws:s3:::bucket-${ID}
 
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        Identifies resources, which should have access to one another.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "LambdaSg-${ID}"
+
   Lambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -368,17 +383,41 @@ Resources:
       Role: !GetAtt LambdaIAMRole.Arn
       Code:
         ZipFile: |
-          import json
+          const fs = require('fs');
+          const request = require('request');
 
-          print('Loading function')
+          const url = 'https://security.sensiolabs.org/check_lock';
 
-          def lambda_handler(event, context):
-              print("Received event: " + json.dumps(event, indent=2))
-              #curl -F "file=@test.txt" "http://127.0.0.1:8080/fscrawler/_upload"
-              responseData={}
+          var formData = {lock: fs.createReadStream(__dirname + '/composer.lock')};
 
-      Runtime: python3.6
+          var req = request.post(
+              {
+                  headers: {
+                    "Accept": "text/plain",
+                    "Content-Type": "multipart/form-data"
+                  },
+                  url: url,
+                  formData: formData
+              }, function(err, resp, body) 
+              {
+                  if (err) {
+                    console.log('Error!');
+                  } else {
+                    console.log(resp.statusCode);
+                    console.log('body is ' + body);
+                    console.log(JSON.stringify(resp));
+                  }
+              }
+          );
+
+      Runtime: nodejs12.x
       Timeout: 50
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
 
 Outputs:
   S3BucketSecureURL:
