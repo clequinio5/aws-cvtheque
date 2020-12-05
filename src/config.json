@@ -1,0 +1,6 @@
+{
+    "ELASTICSEARCH_INDEX": "cvtheque",
+    "ELASTICSEARCH_URL": "http://127.0.0.1:9200",
+    "CVTHEQUE_BASE": "S3Bucket",
+    "OUTLOOK_PATH": "Outlook"
+}
