@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:latest
     steps:
       - checkout
       - run:
@@ -10,7 +10,7 @@ jobs:
           command: yarn install
   test:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:latest
     steps:
       - checkout
       - run:
@@ -18,14 +18,12 @@ jobs:
           command: CI=true yarn test
   analyse:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:latest
     steps:
       - checkout
       - run:
           name: Analyse
-          command: |
-            echo "Analyse ok"
-
+          command: yarn audit
   deploy-infra-with-aws:
     docker:
       - image: amazon/aws-cli
@@ -41,8 +39,8 @@ jobs:
           command: |
             aws cloudformation deploy \
               --stack-name "aws-cvtheque-${CIRCLE_WORKFLOW_ID:0:8}" \
-              --template-file .circleci/aws-infra/backend.yml \
-              --parameter .circleci/aws-infra/backend.json \
+              --template-file .circleci/aws-infra/infra.yml \
+              --parameter .circleci/aws-infra/infra.json \
               --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:8}" \
               --region eu-west-3
@@ -104,7 +102,7 @@ jobs:
 
   verify:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:latest
     steps:
       - checkout
       - run:
@@ -114,7 +112,7 @@ jobs:
 
   promote:
     docker:
-      - image: circleci/node:13.8.0
+      - image: circleci/node:latest
     steps:
       - checkout
       - run:

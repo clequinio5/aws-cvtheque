@@ -1,10 +1,42 @@
 [
     {
-        "ParameterKey": "ESVersion",
-        "ParameterValue": "7.10"
+        "ParameterKey": "ElasticsearchVersion",
+        "ParameterValue": "7.4"
     },
     {
-        "ParameterKey": "ESInstanceType",
+        "ParameterKey": "ElasticsearchName",
         "ParameterValue": "t3.small.elasticsearch"
+    },
+    {
+        "ParameterKey": "ElasticsearchMasterInstanceType",
+        "ParameterValue": "t2.small.elasticsearch"
+    },
+    {
+        "ParameterKey": "ElasticsearchDataInstanceType",
+        "ParameterValue": "t2.small.elasticsearch"
+    },
+    {
+        "ParameterKey": "NumberOfMasterNodes",
+        "ParameterValue": "3"
+    },
+    {
+        "ParameterKey": "NumberOfDataNodes",
+        "ParameterValue": "2"
+    },
+    {
+        "ParameterKey": "FSCrawlerKeyName",
+        "ParameterValue": "fscrawler"
+    },
+    {
+        "ParameterKey": "AccessLocation",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "AvailabilityZone1",
+        "ParameterValue": "eu-west-3a"
+    },
+    {
+        "ParameterKey": "AvailabilityZone2",
+        "ParameterValue": "eu-west-3b"
     }
 ]
