@@ -2,11 +2,11 @@
 
 # CI/CD AWS deployment of a CVtheque
 
+## Stack
+
 ## Overview
 
-## Infrastructure
-
-## Stack
+![Architecture](./assets/aws-cvtheque.png)
 
 ## Deploy
 
